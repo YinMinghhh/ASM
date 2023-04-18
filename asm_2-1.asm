@@ -20,6 +20,7 @@ FUNC SEGMENT
 
         PUSH    AX
         PUSH    CX
+        PUSH    DX
 
         SUB     BX, BX
         MOV     CX, 10D
@@ -40,10 +41,13 @@ FUNC SEGMENT
         XCHG    AX, BX
         
         JMP NEWCHAR
+        
 
     EXIT:
+        POP     DX
         POP     CX
         POP     AX
+        CALL    FAR PTR CRLF
         RET
     DECIBIN ENDP
 
@@ -137,6 +141,42 @@ FUNC SEGMENT
         RET
     BINIBIN ENDP
 
+    BINIDEC PROC    FAR
+        PUSH    AX
+        PUSH    BX
+        PUSH    CX
+        PUSH    DX
+        
+        MOV     CX, 1
+        BINIDEC_BEGIN:
+            MOV     AX, BX
+            MOV     DL, 10D
+            DIV     DL
+            PUSH    AX
+            CMP     AL, 0
+            JZ      BINIDEC_END
+            MOV     BL, AL
+            ; SUB     BH, BH
+            INC     CX
+            JMP     BINIDEC_BEGIN
+
+        BINIDEC_END:
+            POP     DX
+            XCHG    DH, DL
+            ADD     DL, '0'
+            MOV     AH, 02H
+            INT     21H
+            LOOP    BINIDEC_END
+
+
+        POP     DX
+        POP     CX
+        POP     BX
+        POP     AX
+        CALL    FAR PTR CRLF
+        RET
+    BINIDEC ENDP
+
     PRINT_DL PROC NEAR
         PUSH    AX
 
@@ -187,9 +227,11 @@ MAIN:
     
 REPEAT:    
     CALL    DECIBIN
-    CALL    BINIHEX
-    CALL    BINIOCT
+    
     CALL    BINIBIN
+    CALL    BINIOCT
+    CALL    BINIDEC
+    CALL    BINIHEX
 
     DEC     CX
     JNZ     REPEAT
