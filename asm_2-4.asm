@@ -90,6 +90,7 @@ DATAS   SEGMENT
     SHRL    DW  0
     RORH    DW  0
     RORL    DW  0
+    INPUT_TIPS  DB  'PLEASE INPUT TWO HEX NUMBERS: ', 0AH, 0DH, '>>>', '$'
 DATAS   ENDS
 
 STACKS  SEGMENT
@@ -99,7 +100,28 @@ STACKS  ENDS
 
 FUNC    SEGMENT
     ASSUME CS:FUNC
-    ;DESCRIPTION
+    PRINT_INPUT_TIPS    PROC    FAR
+        PUSH    AX
+        PUSH    BX
+        PUSH    CX
+        PUSH    DX
+        PUSH    DS
+        PUSH    SI
+
+        LEA     DX, INPUT_TIPS
+        MOV     AH, 09H
+        INT     21H
+
+        POP     SI
+        POP     DS
+        POP     DX
+        POP     CX
+        POP     BX
+        POP     AX
+        RET
+    PRINT_INPUT_TIPS    ENDP
+
+    ; 输入两个16位的十六进制数
     INPUT PROC  FAR
         PUSH    AX
         PUSH    BX
@@ -117,15 +139,26 @@ FUNC    SEGMENT
             MOV     AH, 01H
             INT     21H
 
+            ; 0-9
             SUB     AL, '0'
             JB      INPUT_NEW_DIGIT_END
             CMP     AL, 9D
-            JA      INPUT_NEW_DIGIT_END
+            JBE     TO_DIGIT
 
+            ; A-F 和 A-F
+            ADD     AL, '0'
+            AND     AL, 0DFH   ; 统一转为大写
+            SUB     AL, 'A'
+            JB      INPUT_NEW_DIGIT_END
+            CMP     AL, 5D
+            JA      INPUT_NEW_DIGIT_END
+            ADD     AL, 10D
+
+            TO_DIGIT:
             CBW
 
             XCHG    AX, BX
-            MOV     DX, 10D
+            MOV     DX, 16D
             MUL     DX
             ADD     AX, BX
             XCHG    AX, BX
@@ -214,16 +247,26 @@ MAIN:
     MOV     SP, STACK_LENGHT_WORD * 2
     ; ====================================
 
+    ; 输入操作数
+    CALL    PRINT_INPUT_TIPS
     CALL    INPUT
 
-    ROR32   [HIGH16],[LOW16],1D
+    ; ; 输出查看输入是否正确
+    ; LEA     SI, HIGH16
+    ; CALL    PRINT_SI_WORD
+    ; LEA     SI, LOW16
+    ; CALL    PRINT_SI_WORD
+    ; CALL    CRLF
+
+    ; 题目没有要求输入位移位数,这里默认位移1位
+    ROR32   [HIGH16], [LOW16], 1D
     LEA     SI, RORH
     CALL    PRINT_SI_WORD
     LEA     SI, RORL
     CALL    PRINT_SI_WORD
     CALL    CRLF
 
-    SHR32   [HIGH16],[LOW16],1D
+    SHR32   [HIGH16], [LOW16], 1D
     LEA     SI, SHRH
     CALL    PRINT_SI_WORD
     LEA     SI, SHRL
