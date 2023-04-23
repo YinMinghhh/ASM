@@ -55,16 +55,11 @@ ROR32   MACRO   X,Y,N
 
     MOV     CX, N
     ROR32_ONE_BIT:
-        SUB     BX, BX
-
-        SHL     DX, 1
-        PUSHF
-        TEST    AX, 1B
-        JZ      ROR32_NOT_ADC
+        SHR     DX, 1
+        RCR     AX, 1
+        jnc     ROR32_NOT_ADC
         OR      DX, 8000H
         ROR32_NOT_ADC:
-        POPF
-        RCR     AX, 1
         
     DEC     CX
     JNZ     ROR32_ONE_BIT
@@ -231,10 +226,10 @@ FUNC    SEGMENT
     CRLF   ENDP 
 FUNC    ENDS    
 
-; MACROS  SEGMENT
-;     ASSUME  CS:MACROS
-
-; MACROS  ENDS    
+VARIABLES   SEGMENT
+    ASSUME DS:VARIABLES
+    DW  100H    DUP(0)
+VARIABLES   ENDS
 
 CODES   SEGMENT
     ASSUME CS:CODES, DS:DATAS, SS:STACKS

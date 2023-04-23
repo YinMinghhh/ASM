@@ -1,25 +1,42 @@
-;1、编写一个完整程序，实现如下功能：键盘输入十进制整数保存在BX寄存器，
-;分别以二进制、八进制、十进制和十六进制显示出来；  
+DATA SEGMENT
+X DB 122;假定x为122
+DATA ENDS
 
-def_str macro name, cap
-    name db cap, cap, cap dup('0dh') 
-endm
-          
-datas segment
-    capacity = 10
-    def_str bin, capacity
-    def_str oct, capacity
-    def_str dec_,capacity
-    def_str hex, capacity 
-datas ends               
+SSEG SEGMENT STACK 
+ DW 10 DUP(?);定义一个栈来存储每位数
+SSEG ENDS
 
-stacks segment
-    ;
-stacks ends
-    
-codes segment
-     assume cs:codes, ds:datas, ss:stacks
-     start:
-     
-     end start
-codes ends            
+CODE SEGMENT
+ ASSUME CS:CODE,DS:DATA,SS:SSEG
+START:
+ MOV AX,DATA
+ MOV DS,AX
+ MOV DL,X
+ MOV CX,1;计数 初始为1
+ MOV BL,10;每次除10
+
+ONE:
+ MOV AH,0;清零（存余数）
+ MOV AL,DL
+ DIV BL;除10
+ PUSH AX;进栈
+ CMP AL,0;是否已除净
+ JLE ENDL
+ MOV DL,AL
+ INC CX
+ JMP ONE
+
+
+ENDL:
+  POP DX
+  XCHG DH,DL;余数转入DL
+  ADD DL,30H
+  MOV AH,2;输出
+  INT 21H
+  LOOP ENDL
+
+  MOV AX,4C00H
+  INT 21H
+
+CODE ENDS
+ END START

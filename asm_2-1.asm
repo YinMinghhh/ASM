@@ -2,7 +2,7 @@
 ;分别以二进制、八进制、十进制和十六进制显示出来；  
           
 DATAS SEGMENT
-    INUPUT  DB ">>>$"
+    INPUT  DB ">>>$"
     ENDL    DB 0DH, 0AH, '$'
 DATAS ENDS               
 
@@ -47,7 +47,7 @@ FUNC SEGMENT
         POP     DX
         POP     CX
         POP     AX
-        CALL    FAR PTR CRLF
+        ; CALL    FAR PTR CRLF
         RET
     DECIBIN ENDP
 
@@ -204,7 +204,7 @@ FUNC SEGMENT
         PUSH    AX
         PUSH    DX
 
-        LEA     DX, INUPUT
+        LEA     DX, INPUT
         MOV     AH, 09H
         INT     21H
 
